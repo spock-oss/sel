@@ -1,0 +1,24 @@
+{
+  "id": "shed",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "Where is the bucket?"
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "span",
+          "start": 40,
+          "end": 50
+        }
+      ]
+    }
+  ],
+  "source_text": "The spade is by the door. The bucket is on a shelf."
+}

@@ -1,0 +1,35 @@
+{
+  "id": "train-time",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "Which train leaves latest?"
+    },
+    {
+      "id": "q2",
+      "text": "When does that train leave?"
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "span",
+          "start": 34,
+          "end": 38
+        }
+      ],
+      "q2": [
+        {
+          "kind": "span",
+          "start": 55,
+          "end": 60
+        }
+      ]
+    }
+  ],
+  "source_text": "The red train leaves at noon. The blue train leaves at seven."
+}
