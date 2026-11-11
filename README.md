@@ -1,5 +1,7 @@
 # SEL 27B
 
+[Model weights](https://huggingface.co/spock-oss/sel-qwen-27b) · [Training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
+
 SEL scores source positions in text and images against one or more questions. It runs the Qwen backbone once and reads the resulting hidden states through a dense scorer or a recurrent span pointer. The linked pointer can condition a later selection on the earlier one using the same backbone states.
 
 This repository contains the 27B inference and training code. It includes a tiny synthetic dataset for smoke tests. The trained adapter, selection head and full 26-task corpus are separate artifacts.
@@ -52,4 +54,12 @@ CUDA_VISIBLE_DEVICES=0 sel evaluate --weights .artifacts/demo-weights \
   --data .artifacts/demo-data --split test
 ```
 
-Export reads a trusted local training checkpoint and writes the inference tensors as safetensors. A local copy of the final 27B bundle can be placed in `.artifacts/sel-27b`. The release dataset should use the source format above and retain its provenance and split membership.
+Export reads a trusted local training checkpoint and writes the inference tensors as safetensors. Download the released bundle and use its directory with `--weights`.
+
+```sh
+hf download spock-oss/sel-qwen-27b \
+  --include '*.safetensors' adapter_config.json sel_config.json \
+  --local-dir .artifacts/sel-27b
+```
+
+The [dataset card](https://huggingface.co/datasets/spock-oss/sel-27b-training) shows how to download the public splits and materialize them for `sel prepare`.
