@@ -1,0 +1,5 @@
+{"artifact_path": "records/state.json", "selection_mode": "dense"}
+{"artifact_path": "records/animal.json", "selection_mode": "one_coherent_answer"}
+{"artifact_path": "records/train-time.json", "selection_mode": "linked"}
+{"artifact_path": "records/shed.json", "selection_mode": "dense"}
+{"artifact_path": "records/colors.json", "selection_mode": "dense"}

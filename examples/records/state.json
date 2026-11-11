@@ -1,0 +1,24 @@
+{
+  "id": "state",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "Which state governs the agreement?"
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "span",
+          "start": 42,
+          "end": 48
+        }
+      ]
+    }
+  ],
+  "source_text": "This agreement is governed by the laws of Oregon."
+}

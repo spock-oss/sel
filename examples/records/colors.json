@@ -1,0 +1,30 @@
+{
+  "id": "colors",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "Select the green square."
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "box",
+          "asset": "squares.png",
+          "xyxy": [
+            128,
+            64,
+            192,
+            128
+          ]
+        }
+      ]
+    }
+  ],
+  "source_image": "squares.png",
+  "modality": "image"
+}

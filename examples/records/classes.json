@@ -1,0 +1,24 @@
+{
+  "id": "classes",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "Which room is used for pottery?"
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "span",
+          "start": 43,
+          "end": 49
+        }
+      ]
+    }
+  ],
+  "source_text": "Painting meets in Room 5. Pottery meets in Room 6."
+}

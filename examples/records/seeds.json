@@ -1,0 +1,24 @@
+{
+  "id": "seeds",
+  "verification": {
+    "status": "verified"
+  },
+  "queries": [
+    {
+      "id": "q1",
+      "text": "What is growing in the blue pot?"
+    }
+  ],
+  "solutions": [
+    {
+      "q1": [
+        {
+          "kind": "span",
+          "start": 38,
+          "end": 42
+        }
+      ]
+    }
+  ],
+  "source_text": "Dana planted basil in the red pot and mint in the blue pot."
+}
