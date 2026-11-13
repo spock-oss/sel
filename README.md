@@ -6,6 +6,14 @@ SEL scores source positions in text and images against one or more questions. It
 
 This repository contains the 27B inference and training code. It includes a tiny synthetic dataset for smoke tests. The trained adapter, selection head and full 26-task corpus are separate artifacts.
 
+## Model downloads
+
+| Model | Inference entry point |
+| --- | --- |
+| [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | `run_selection.py` from the model repo |
+| [SEL Qwen 4B](https://huggingface.co/spock-oss/sel-qwen-4b) | `run_selection.py` from the model repo |
+| [SEL Qwen 27B](https://huggingface.co/spock-oss/sel-qwen-27b) | `sel predict` as shown below |
+
 ## Install
 
 Use Linux, Python 3.12 and an NVIDIA CUDA GPU with BF16 support. The tested stack uses the CUDA 13.0 PyTorch build. Use a compatible CUDA toolkit, C++ compiler and Ninja to build FlashAttention 2, or install a wheel built for the same Python, PyTorch and CUDA combination.
