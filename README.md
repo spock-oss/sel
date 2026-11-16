@@ -1,6 +1,6 @@
 # SEL
 
-[SEL 9B weights](https://huggingface.co/spock-oss/sel-qwen-9b) · [27B training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
+[SEL 9B weights](https://huggingface.co/spock-oss/sel-qwen-9b) · [9B training dataset](https://huggingface.co/datasets/spock-oss/sel-data/tree/602f0231505ff59c823a029d6a0869436ed1b3d1) · [27B training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
 
 SEL scores source positions in text and images against one or more questions. It runs the Qwen backbone once and reads the resulting hidden states through a dense scorer or a recurrent span pointer. The linked pointer can condition a later selection on the earlier one using the same backbone states.
 
