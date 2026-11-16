@@ -21,6 +21,7 @@ def predict(
     threshold: float | None = None,
     environment: str | None = None,
     query_first: bool = False,
+    max_length: int = CONTEXT,
 ) -> dict:
     if not text and image is None:
         raise ValueError("Provide source text or an image")
@@ -29,16 +30,16 @@ def predict(
         text=text,
         image_path=image,
         queries=queries,
-        max_length=CONTEXT,
+        max_length=max_length,
         query_first=query_first,
     )
     length = row["inputs"]["input_ids"].shape[-1]
     if environment:
         prefix = environment_entry(processor.tokenizer, environment, length)
         length = prefix["input_tokens"]
-        if length > CONTEXT:
+        if length > max_length:
             raise ValueError(
-                f"Input exceeds {CONTEXT} tokens with environment instructions"
+                f"Input exceeds {max_length} tokens with environment instructions"
             )
         add_environment_prompt(row, prefix)
     if mode:
