@@ -1,74 +1,75 @@
 # SEL
 
-[SEL 9B weights](https://huggingface.co/spock-oss/sel-qwen-9b) · [9B training dataset](https://huggingface.co/datasets/spock-oss/sel-data/tree/602f0231505ff59c823a029d6a0869436ed1b3d1) · [27B training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
+SEL selects positions in text and images in a single model forward pass.
+Give it a question and a source. It scores the original text tokens or image
+patches and returns their positions. Use it to highlight evidence in a
+document or select a region in an image.
 
-SEL scores source positions in text and images against one or more questions. It runs the Qwen backbone once and reads the resulting hidden states through a dense scorer or a recurrent span pointer. The linked pointer can condition a later selection on the earlier one using the same backbone states.
+[SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) · [Selection as a model shape](https://spock.one/blog/selection-is-a-model-shape)
 
-SEL 9B is the dense selection model. It takes one question plus text, an image, or both, and returns source-aligned scores in a single forward pass. The 27B release also supports linked selections with its recurrent span pointer. This repository contains inference for 9B and 27B, training code for the 27B recipe, and a small dataset for smoke tests.
+## Models
 
-## Model downloads
-
-| Model | Inference entry point |
+| Model | How to run it |
 | --- | --- |
-| [SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) | `sel predict` with question-first dense selection |
-| [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | `run_selection.py` from the model repo |
-| [SEL Qwen 4B](https://huggingface.co/spock-oss/sel-qwen-4b) | `run_selection.py` from the model repo |
-| [SEL Qwen 27B](https://huggingface.co/spock-oss/sel-qwen-27b) | `sel predict` as shown below |
+| [SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) | Use `sel predict` below for single-question dense selection. |
+| [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | Use the runner and instructions in the model repository. |
 
 ## Install
 
-Use Linux, Python 3.12 and an NVIDIA CUDA GPU with BF16 support. The tested stack uses the CUDA 13.2 PyTorch build. Use a compatible CUDA toolkit, C++ compiler and Ninja to build FlashAttention 2, or install a wheel built for the same Python, PyTorch and CUDA combination.
+The 9B CLI uses Linux, Python 3.12, and a CUDA GPU with BF16 support. The
+commands below use PyTorch built for CUDA 13.2. Install the matching CUDA
+toolkit and a C++ compiler to build FlashAttention 2, or use a wheel built
+for your Python, PyTorch, and CUDA versions.
 
 ```sh
+git clone https://github.com/spock-oss/sel.git
+cd sel
 uv venv --python 3.12
 source .venv/bin/activate
-uv pip install torch==2.15.0 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cu132
+uv pip install torch==2.15.0 torchvision==0.29.2 \
+  --index-url https://download.pytorch.org/whl/cu132
 uv pip install -e . packaging setuptools wheel ninja
 uv pip install --no-build-isolation flash-attn==2.8.3.post2
 ```
 
-For 9B, the loader uses the pinned [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a) BF16 snapshot. For 27B, it uses the BF16 snapshot of [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B/tree/37561816e66b5b9153b1b64c10968c18c1e6f4a0), about 56 GB on disk. It quantizes the frozen language backbone to NF4 at load time and preserves the vision encoder and LM head in BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU. Pass `--base /path/to/snapshot` to use an existing copy. Otherwise the command downloads the pinned snapshot from Hugging Face.
+## Run SEL 9B
 
-## Run inference
-
-Point `--weights` at the directory containing `adapter_model.safetensors`, `adapter_config.json`, `selection_head.safetensors` and `sel_config.json`.
-
-```sh
-CUDA_VISIBLE_DEVICES=0 sel predict --weights .artifacts/sel-qwen-9b \
-  --text 'This agreement is governed by the laws of Oregon.' \
-  --query 'Which state governs the agreement?'
-```
-
-Use `--text-file` for a document and `--image` for an image. Both can be supplied together. SEL 9B places one question before the source automatically. For SEL 27B, repeat `--query` for multiple questions. The command returns per-question scores and selected source indices, with character offsets for text and bounding boxes in source-image coordinates for patches. Use `--mode` to override the learned router, `--threshold` for a custom dense threshold, and `--calibrated` to use thresholds measured on validation. Input is limited to 2,048 tokens including the prompt and visual tokens. Over-length inputs are rejected.
-
-## Prepare and train SEL 27B
-
-```sh
-sel prepare --source examples --output .artifacts/demo-data
-CUDA_VISIBLE_DEVICES=0 sel train --data .artifacts/demo-data \
-  --output .artifacts/demo-run --max-steps 1
-CUDA_VISIBLE_DEVICES=0 sel train --data .artifacts/demo-data \
-  --output .artifacts/demo-run --resume
-```
-
-The source directory provides `train.jsonl`, `val.jsonl`, and `test.jsonl`. Each row names an `artifact_path` and can set `selection_mode` (`dense`, `one_coherent_answer`, or `linked`), `task_id`, `query_first`, and `environment_prompt`. Each record contains the source, questions, verification status, and complete acceptable solutions keyed by question ID. See [text](examples/records/state.json), [image](examples/records/colors.json), and [linked questions](examples/records/train-time.json). Text spans use half-open character offsets. Image annotations use source-pixel coordinates. Keep related problems in the same split when building your manifests.
-
-The training recipe uses rank-16 LoRA, a 256-wide selection head, four examples per optimizer step, and one epoch. The 16 full-attention blocks are bidirectional and the 48 linear-attention blocks remain directional. Optimizer, sampler, RNG, and LR position are saved to `latest.pt` for resume. Validation calibrates thresholds and test reports fixed and calibrated metrics.
-
-## Export and evaluate
-
-```sh
-sel export --checkpoint .artifacts/demo-run/latest.pt --output .artifacts/demo-weights
-CUDA_VISIBLE_DEVICES=0 sel evaluate --weights .artifacts/demo-weights \
-  --data .artifacts/demo-data --split test
-```
-
-Export reads a trusted local training checkpoint and writes the inference tensors as safetensors. Download the released bundle and use its directory with `--weights`.
+Download the LoRA adapter, dense selection head, and their configuration files.
 
 ```sh
 hf download spock-oss/sel-qwen-9b \
   --include '*.safetensors' adapter_config.json sel_config.json \
   --local-dir .artifacts/sel-qwen-9b
+
+CUDA_VISIBLE_DEVICES=0 sel predict --weights .artifacts/sel-qwen-9b \
+  --text 'This agreement is governed by the laws of Oregon.' \
+  --query 'Which state governs the agreement?'
 ```
 
-The [dataset card](https://huggingface.co/datasets/spock-oss/sel-27b-training) shows how to download the public splits and materialize them for `sel prepare`.
+Use `--text-file` for a document or `--image` for an image. You can supply
+both for a multimodal source. The CLI puts the question before the source
+and supports up to **2,048 tokens** per input, including the question, prompt
+formatting, and any image patches.
+
+The JSON result contains scores and selected source indices. Each source
+unit includes character offsets for text or a bounding box in the original
+image coordinates. Default selection thresholds are **0.4** for text and
+**0.3** for images or mixed inputs. Use `--threshold` to adjust the cutoff.
+
+The CLI downloads the pinned [Qwen3.5-9B base](https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a)
+and quantizes the frozen language weights to NF4 at load time. The vision
+encoder runs in BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU and use
+`--base /path/to/snapshot` to load an existing copy of the base.
+
+## Reproduce training
+
+The 9B model was trained from the pretrained base with rank-32 LoRA and a
+dense selection head. The dataset contains 57,927 training examples, 2,406
+validation examples, and 3,136 test examples. Each example has one question
+and one reference selection mask.
+
+The [training dataset](https://huggingface.co/datasets/spock-oss/sel-data)
+contains the exact packed inputs, manifests, and image assets. The
+[reproduction guide](https://github.com/spock-oss/spock-research/blob/main/experiments/sel-9b-reproduction.md)
+pins the data revision, base model, and training environment. Reproducing
+the training run requires access to the dataset and Spock Research.
