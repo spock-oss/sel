@@ -43,11 +43,3 @@ and `image_base64`. The optional `threshold` sets the selection cutoff.
 Each result unit contains a score, a selection flag, and its position in
 the source. Inputs are limited to 2,048 tokens, including the question,
 prompt formatting, and image patches.
-
-## Training
-
-The [training dataset](https://huggingface.co/datasets/spock-oss/sel-data)
-contains the packed inputs for both models. The
-[reproduction guide](https://github.com/spock-oss/spock-research/blob/main/experiments/sel-9b-reproduction.md)
-pins the corpus, base models, and training environment. Reproducing training
-requires access to the dataset and Spock Research.
