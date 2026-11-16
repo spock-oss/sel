@@ -25,6 +25,16 @@ SEL 9B selects order C from the image because 21 L + 19 L fits exactly.
 
 ![SEL 9B highlights order C on an image listing four orders](examples/cart.png)
 
+**Board puzzles.** SEL 9B highlights the shortest maze path, two safe Minesweeper
+cells, and the empty Sudoku cell where 7 belongs. The cutoffs for these examples
+are 0.3, 0.95, and 0.7, respectively.
+
+![SEL selections on a maze, a Minesweeper board, and a Sudoku board](examples/board-selection.png)
+
+The interactive gallery also shows evidence selection on HotpotQA, a map
+prediction on GeoGuesser, and the code line that needs changing in SWE-Gym.
+[Interactive examples](https://spock.one/blog/selection-is-a-model-shape#sel-examples)
+
 ## Quickstart
 
 On Linux with an NVIDIA GPU, install the tested vLLM runtime.
