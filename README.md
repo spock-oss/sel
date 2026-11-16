@@ -8,6 +8,23 @@ character ranges for text and pixel boxes for images.
 [SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) ·
 [Selection as a model shape](https://spock.one/blog/selection-is-a-model-shape)
 
+## Examples
+
+**Text · Lockbox code.** Both released models select `653` by
+combining the three rules in the source.
+
+![SEL highlights 653 among four candidate lockbox codes](examples/lockbox.png)
+
+**Image · Signed temperatures.** SEL 9B selects row B: from −4°C
+to +5°C, the largest increase.
+
+![SEL 9B highlights row B on a table of temperature changes](examples/thermometer.png)
+
+**Text + image · Cart capacity.** The text gives a 40 L limit.
+SEL 9B selects order C from the image because 21 L + 19 L fits exactly.
+
+![SEL 9B highlights order C on an image listing four orders](examples/cart.png)
+
 ## Quickstart
 
 On Linux with an NVIDIA GPU, install the tested vLLM runtime.
