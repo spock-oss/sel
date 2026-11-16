@@ -14,25 +14,25 @@ character ranges for text and pixel boxes for images.
 
 Select every square on the shortest path from red to green.
 
-![SEL highlights the path connecting the red start and green goal](examples/maze.png)
+<img src="examples/maze.png" alt="SEL highlights the path connecting the red start and green goal" width="50%">
 
 ### SWE-Gym
 
 Select the existing line of code that needs to change to fix the reported issue.
 
-![SEL highlights the line that appends the record list instead of adding its entries individually](examples/swe-gym.png)
+<img src="examples/swe-gym.png" alt="SEL highlights the line that appends the record list instead of adding its entries individually" width="50%">
 
 ### HotpotQA
 
 Which former tennis player played for the United States, Iván Molina or Alex O’Brien? Select the supporting sentences.
 
-![SEL highlights the sentences about O’Brien and Molina](examples/hotpotqa.png)
+<img src="examples/hotpotqa.png" alt="SEL highlights the sentences about O’Brien and Molina" width="50%">
 
 ### Game
 
 What can I use to climb?
 
-![SEL highlights the ladder overhead in LIMBO](examples/game.png)
+<img src="examples/game.png" alt="SEL highlights the ladder overhead in LIMBO" width="50%">
 
 Sources include [SWE-Gym](https://github.com/SWE-Gym/SWE-Gym) and [Moto](https://github.com/getmoto/moto), [HotpotQA](https://hotpotqa.github.io/) ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)), and [LIMBO](https://playdead.com/games/limbo/) by Playdead.
 
