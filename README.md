@@ -10,29 +10,32 @@ character ranges for text and pixel boxes for images.
 
 ## Examples
 
-**Text · Lockbox code.** Both released models select `653` by
-combining the three rules in the source.
+### Maze
 
-![SEL highlights 653 among four candidate lockbox codes](examples/lockbox.png)
+Select every square on the shortest path from red to green.
 
-**Image · Signed temperatures.** SEL 9B selects row B: from −4°C
-to +5°C, the largest increase.
+![SEL highlights the path connecting the red start and green goal](examples/maze.png)
 
-![SEL 9B highlights row B on a table of temperature changes](examples/thermometer.png)
+### SWE-Gym
 
-**Text + image · Cart capacity.** The text gives a 40 L limit.
-SEL 9B selects order C from the image because 21 L + 19 L fits exactly.
+Select the existing line of code that needs to change to fix the reported issue.
 
-![SEL 9B highlights order C on an image listing four orders](examples/cart.png)
+![SEL highlights the line that appends the record list instead of adding its entries individually](examples/swe-gym.png)
 
-**Board puzzles.** SEL 9B highlights the shortest maze path, two safe Minesweeper
-cells, and the empty Sudoku cell where 7 belongs. The cutoffs for these examples
-are 0.3, 0.95, and 0.7, respectively.
+### HotpotQA
 
-![SEL selections on a maze, a Minesweeper board, and a Sudoku board](examples/board-selection.png)
+Which former tennis player played for the United States, Iván Molina or Alex O’Brien? Select the supporting sentences.
 
-The interactive gallery also shows evidence selection on HotpotQA, a map
-prediction on GeoGuesser, and the code line that needs changing in SWE-Gym.
+![SEL highlights the sentences about O’Brien and Molina](examples/hotpotqa.png)
+
+### Game
+
+What can I use to climb?
+
+![SEL highlights the ladder overhead in LIMBO](examples/game.png)
+
+Sources include [SWE-Gym](https://github.com/SWE-Gym/SWE-Gym) and [Moto](https://github.com/getmoto/moto), [HotpotQA](https://hotpotqa.github.io/) ([CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)), and [LIMBO](https://playdead.com/games/limbo/) by Playdead.
+
 [Interactive examples](https://spock.one/blog/selection-is-a-model-shape#sel-examples)
 
 ## Quickstart
