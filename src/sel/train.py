@@ -60,15 +60,35 @@ def evaluate_split(
 ):
     rows, routing = [], Counter()
     network.eval()
+    dense_only = getattr(network.head, "router", None) is None
     with torch.inference_mode():
         for entry in entries:
             if should_stop():
                 return None
             sample = load_entry(entry, directory, processor)
-            loss, dense, router, features = objective(network, sample)
-            mode = predicted_selection_mode(router, len(features[1]))
-            with torch.autocast("cuda", dtype=torch.bfloat16):
-                logits = dense if mode == "dense" else network.head.predict(*features)
+            if dense_only:
+                if (
+                    sample["selection_mode"] != "dense"
+                    or sample["targets"].shape[:2] != (1, 1)
+                    or sample["question_positions"].max()
+                    >= sample["source_indices"].min()
+                ):
+                    raise ValueError(
+                        "SEL 9B evaluation needs one question before the source and one valid dense mask"
+                    )
+                logits, mode = network.forward_selection(sample)
+                loss = joint_bce_loss(
+                    logits,
+                    sample["targets"].to(network.device),
+                    sample["target_mask"].to(network.device),
+                )[0]
+            else:
+                loss, dense, router, features = objective(network, sample)
+                mode = predicted_selection_mode(router, len(features[1]))
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    logits = (
+                        dense if mode == "dense" else network.head.predict(*features)
+                    )
             rows.append(
                 {
                     "probabilities": logits.float().sigmoid().cpu(),

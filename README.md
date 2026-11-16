@@ -1,46 +1,47 @@
-# SEL 27B
+# SEL
 
-[Model weights](https://huggingface.co/spock-oss/sel-qwen-27b) · [Training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
+[SEL 9B weights](https://huggingface.co/spock-oss/sel-qwen-9b) · [27B training dataset](https://huggingface.co/datasets/spock-oss/sel-27b-training) · [Research blog](https://spock.one/blog/selection-is-a-model-shape)
 
 SEL scores source positions in text and images against one or more questions. It runs the Qwen backbone once and reads the resulting hidden states through a dense scorer or a recurrent span pointer. The linked pointer can condition a later selection on the earlier one using the same backbone states.
 
-This repository contains the 27B inference and training code. It includes a tiny synthetic dataset for smoke tests. The trained adapter, selection head and full 26-task corpus are separate artifacts.
+SEL 9B is the dense selection model. It takes one question plus text, an image, or both, and returns source-aligned scores in a single forward pass. The 27B release also supports linked selections with its recurrent span pointer. This repository contains inference for 9B and 27B, training code for the 27B recipe, and a small dataset for smoke tests.
 
 ## Model downloads
 
 | Model | Inference entry point |
 | --- | --- |
+| [SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) | `sel predict` with question-first dense selection |
 | [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | `run_selection.py` from the model repo |
 | [SEL Qwen 4B](https://huggingface.co/spock-oss/sel-qwen-4b) | `run_selection.py` from the model repo |
 | [SEL Qwen 27B](https://huggingface.co/spock-oss/sel-qwen-27b) | `sel predict` as shown below |
 
 ## Install
 
-Use Linux, Python 3.12 and an NVIDIA CUDA GPU with BF16 support. The tested stack uses the CUDA 13.0 PyTorch build. Use a compatible CUDA toolkit, C++ compiler and Ninja to build FlashAttention 2, or install a wheel built for the same Python, PyTorch and CUDA combination.
+Use Linux, Python 3.12 and an NVIDIA CUDA GPU with BF16 support. The tested stack uses the CUDA 13.2 PyTorch build. Use a compatible CUDA toolkit, C++ compiler and Ninja to build FlashAttention 2, or install a wheel built for the same Python, PyTorch and CUDA combination.
 
 ```sh
 uv venv --python 3.12
 source .venv/bin/activate
-uv pip install torch==2.14.1 torchvision==0.29.1 --index-url https://download.pytorch.org/whl/cu130
+uv pip install torch==2.15.0 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cu132
 uv pip install -e . packaging setuptools wheel ninja
 uv pip install --no-build-isolation flash-attn==2.8.3.post2
 ```
 
-The loader uses the BF16 snapshot of [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B/tree/37561816e66b5b9153b1b64c10968c18c1e6f4a0), about 56 GB on disk. It quantizes the frozen language backbone to NF4 at load time and preserves the vision encoder and LM head in BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU. Pass `--base /path/to/snapshot` to use an existing copy. Otherwise the command downloads the pinned snapshot from Hugging Face.
+For 9B, the loader uses the pinned [Qwen/Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a) BF16 snapshot. For 27B, it uses the BF16 snapshot of [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B/tree/37561816e66b5b9153b1b64c10968c18c1e6f4a0), about 56 GB on disk. It quantizes the frozen language backbone to NF4 at load time and preserves the vision encoder and LM head in BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU. Pass `--base /path/to/snapshot` to use an existing copy. Otherwise the command downloads the pinned snapshot from Hugging Face.
 
 ## Run inference
 
 Point `--weights` at the directory containing `adapter_model.safetensors`, `adapter_config.json`, `selection_head.safetensors` and `sel_config.json`.
 
 ```sh
-CUDA_VISIBLE_DEVICES=0 sel predict --weights .artifacts/sel-27b \
+CUDA_VISIBLE_DEVICES=0 sel predict --weights .artifacts/sel-qwen-9b \
   --text 'This agreement is governed by the laws of Oregon.' \
   --query 'Which state governs the agreement?'
 ```
 
-Use `--text-file` for a document and `--image` for an image. Both can be supplied together. Repeat `--query` for multiple questions. The command returns per-question scores and selected source indices, with character offsets for text and bounding boxes in source-image coordinates for patches. Use `--mode` to override the learned router, `--threshold` for a custom dense threshold, and `--calibrated` to use thresholds measured on validation. Input is limited to 2,048 tokens including the prompt and visual tokens. Over-length inputs are rejected.
+Use `--text-file` for a document and `--image` for an image. Both can be supplied together. SEL 9B places one question before the source automatically. For SEL 27B, repeat `--query` for multiple questions. The command returns per-question scores and selected source indices, with character offsets for text and bounding boxes in source-image coordinates for patches. Use `--mode` to override the learned router, `--threshold` for a custom dense threshold, and `--calibrated` to use thresholds measured on validation. Input is limited to 2,048 tokens including the prompt and visual tokens. Over-length inputs are rejected.
 
-## Prepare and train
+## Prepare and train SEL 27B
 
 ```sh
 sel prepare --source examples --output .artifacts/demo-data
@@ -65,9 +66,9 @@ CUDA_VISIBLE_DEVICES=0 sel evaluate --weights .artifacts/demo-weights \
 Export reads a trusted local training checkpoint and writes the inference tensors as safetensors. Download the released bundle and use its directory with `--weights`.
 
 ```sh
-hf download spock-oss/sel-qwen-27b \
+hf download spock-oss/sel-qwen-9b \
   --include '*.safetensors' adapter_config.json sel_config.json \
-  --local-dir .artifacts/sel-27b
+  --local-dir .artifacts/sel-qwen-9b
 ```
 
 The [dataset card](https://huggingface.co/datasets/spock-oss/sel-27b-training) shows how to download the public splits and materialize them for `sel prepare`.

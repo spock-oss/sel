@@ -5,15 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sel-selection"
 version = "0.1.0"
-description = "Single-pass text and image selection on Qwen 27B"
+description = "Single-pass text and image selection on Qwen"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "numpy==2.5.4",
   "pillow==13.0.0",
-  "torch==2.14.1",
-  "torchvision==0.29.1",
-  "transformers==5.20.2",
+  "torch==2.15.0",
+  "torchvision==0.29.2",
+  "transformers==5.22.2",
   "huggingface-hub==1.33.0",
   "peft==0.21.2",
   "bitsandbytes==0.50.2",

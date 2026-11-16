@@ -74,8 +74,8 @@ def parse_args():
 def main():
     import torch
 
-    from .model import build_network, load_processor, resolve_base
-    from .weights import export_checkpoint, load_weights
+    from .model import BASE_MODEL, build_network, load_processor, resolve_base
+    from .weights import export_checkpoint, load_weights, read_config
 
     args = parse_args()
     torch.set_num_threads(4)
@@ -83,7 +83,11 @@ def main():
         export_checkpoint(args.checkpoint, args.output)
         return
 
-    base = resolve_base(args.base)
+    config = (
+        read_config(args.weights) if args.command in {"predict", "evaluate"} else {}
+    )
+    model_id = config.get("base_model", BASE_MODEL)
+    base = resolve_base(args.base, model_id=model_id)
     processor = load_processor(base)
     if args.command == "prepare":
         from .dataset import prepare
@@ -103,7 +107,14 @@ def main():
         )
         return
 
-    network = build_network(base)
+    if args.command == "predict" and config.get("max_questions") == 1:
+        if len(args.query) != 1 or args.mode not in (None, "dense"):
+            raise SystemExit("SEL 9B accepts one question per request in dense mode.")
+        if args.calibrated and not config.get("calibrated_thresholds"):
+            raise SystemExit(
+                "SEL 9B provides fixed thresholds. Use --threshold to override."
+            )
+    network = build_network(base, model_id=model_id)
     config = load_weights(network, args.weights)
     if args.command == "predict":
         from .predict import predict
@@ -122,7 +133,7 @@ def main():
             threshold=args.threshold,
             thresholds=config[threshold_key],
             environment=args.environment,
-            query_first=args.query_first,
+            query_first=args.query_first or config.get("query_first", False),
         )
     else:
         from .dataset import open_dataset
@@ -135,7 +146,9 @@ def main():
         )
         result = {
             "fixed": aggregate_scores(rows, config["fixed_thresholds"]),
-            "calibrated": aggregate_scores(rows, config["calibrated_thresholds"]),
+            "calibrated": aggregate_scores(rows, config["calibrated_thresholds"])
+            if config["calibrated_thresholds"]
+            else None,
             "routing": routing,
         }
     print(json.dumps(result, indent=2, allow_nan=False))

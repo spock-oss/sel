@@ -1,12 +1,13 @@
-"""Load the base model used by the SEL 27B checkpoint."""
+"""Load the pinned Qwen backbones used by SEL checkpoints."""
 
 import random
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import torch
 
-from .heads import LinkedPointerHead
+from .heads import DenseHead, LinkedPointerHead
 from .network import DenseSelectionNetwork
 
 BASE_MODEL = "Qwen/Qwen3.8-27B"
@@ -16,7 +17,26 @@ SEED = 3407
 FIXED_THRESHOLDS = {"text": 0.4, "image": 0.3}
 
 
-def resolve_base(local_path: Path | None) -> Path:
+@dataclass(frozen=True)
+class Backbone:
+    revision: str
+    layers: int
+    full_attention: int
+    targets: int
+    rank: int
+    head_kind: str
+
+
+DENSE_9B = "Qwen/Qwen3.5-9B"
+BACKBONES = {
+    BASE_MODEL: Backbone(BASE_REVISION, 64, 16, 496, 16, "linked-pointer"),
+    DENSE_9B: Backbone(
+        "c202236235762e1c871ad0ccb60c8ee5ba337b9a", 32, 8, 248, 32, "dense"
+    ),
+}
+
+
+def resolve_base(local_path: Path | None, *, model_id: str = BASE_MODEL) -> Path:
     if local_path is not None:
         path = local_path.expanduser().resolve(strict=True)
         if not path.is_dir():
@@ -27,8 +47,8 @@ def resolve_base(local_path: Path | None) -> Path:
 
     return Path(
         snapshot_download(
-            BASE_MODEL,
-            revision=BASE_REVISION,
+            model_id,
+            revision=BACKBONES[model_id].revision,
             allow_patterns=["*.json", "*.safetensors", "*.jinja", "*.txt", "*.model"],
         )
     )
@@ -40,7 +60,9 @@ def load_processor(base: Path):
     return AutoProcessor.from_pretrained(base, local_files_only=True)
 
 
-def build_network(base_path: Path, *, training: bool = False) -> DenseSelectionNetwork:
+def build_network(
+    base_path: Path, *, training: bool = False, model_id: str = BASE_MODEL
+) -> DenseSelectionNetwork:
     from fla.ops.gated_delta_rule import chunk_gated_delta_rule
     from peft import LoraConfig, get_peft_model
     from transformers import BitsAndBytesConfig, Qwen3_5ForConditionalGeneration
@@ -48,6 +70,7 @@ def build_network(base_path: Path, *, training: bool = False) -> DenseSelectionN
 
     if torch.cuda.device_count() != 1:
         raise RuntimeError("Expose one CUDA GPU using CUDA_VISIBLE_DEVICES")
+    spec = BACKBONES[model_id]
     random.seed(SEED)
     np.random.seed(SEED)
     torch.manual_seed(SEED)
@@ -79,12 +102,18 @@ def build_network(base_path: Path, *, training: bool = False) -> DenseSelectionN
         if name.startswith("model.language_model.layers.")
         and isinstance(module, torch.nn.Linear)
     ]
-    if len(targets) != 496:
-        raise ValueError(f"Expected 496 text LoRA targets, found {len(targets)}")
+    if len(targets) != spec.targets:
+        raise ValueError(
+            f"Expected {spec.targets} text LoRA targets, found {len(targets)}"
+        )
     model = get_peft_model(
         base,
         LoraConfig(
-            r=16, lora_alpha=32, lora_dropout=0.0, target_modules=targets, bias="none"
+            r=spec.rank,
+            lora_alpha=2 * spec.rank,
+            lora_dropout=0.0,
+            target_modules=targets,
+            bias="none",
         ),
     )
 
@@ -94,8 +123,11 @@ def build_network(base_path: Path, *, training: bool = False) -> DenseSelectionN
     full_attention = [
         layer for layer in language.layers if layer.block_type == "full_attention"
     ]
-    if len(language.layers) != 64 or len(full_attention) != 16:
-        raise ValueError("Expected 16 full-attention and 48 linear-attention blocks")
+    if (len(language.layers), len(full_attention)) != (
+        spec.layers,
+        spec.full_attention,
+    ):
+        raise ValueError(f"Unexpected attention layout for {model_id}")
     for layer in full_attention:
         layer.self_attn.is_causal = False
     if training:
@@ -107,7 +139,12 @@ def build_network(base_path: Path, *, training: bool = False) -> DenseSelectionN
         for name, p in model.named_parameters()
     ):
         raise ValueError("Expected FP32 LoRA as the only trainable backbone parameters")
-    head = LinkedPointerHead(hidden=language.config.hidden_size, routing=True).to(
-        "cuda", torch.float32
+    hidden = language.config.hidden_size
+    head = (
+        DenseHead(hidden=hidden)
+        if spec.head_kind == "dense"
+        else LinkedPointerHead(hidden=hidden, routing=True)
     )
-    return DenseSelectionNetwork(model, head).train(training)
+    network = DenseSelectionNetwork(model, head.to("cuda", torch.float32))
+    network.base_model_id = model_id
+    return network.train(training)

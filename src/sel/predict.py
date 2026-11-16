@@ -48,7 +48,10 @@ def predict(
         logits, used_mode = network.forward_selection(row)
         scores = logits.float().sigmoid().tolist()
     units = row["metadata"]["source_units"]
-    cutoff = thresholds[row["metadata"]["modality"]] if threshold is None else threshold
+    modality = row["metadata"]["modality"]
+    if text and image is not None and "mixed" in thresholds:
+        modality = "mixed"
+    cutoff = thresholds[modality] if threshold is None else threshold
     return {
         "mode": used_mode,
         "input_tokens": length,
