@@ -1,4 +1,4 @@
-"""Command-line tools for the standalone SEL 27B model."""
+"""Command-line tools for source-aligned SEL models."""
 
 import argparse
 import json
@@ -109,10 +109,12 @@ def main():
 
     if args.command == "predict" and config.get("max_questions") == 1:
         if len(args.query) != 1 or args.mode not in (None, "dense"):
-            raise SystemExit("SEL 9B accepts one question per request in dense mode.")
+            raise SystemExit(
+                "This SEL bundle accepts one question per request in dense mode."
+            )
         if args.calibrated and not config.get("calibrated_thresholds"):
             raise SystemExit(
-                "SEL 9B provides fixed thresholds. Use --threshold to override."
+                "This SEL bundle provides fixed thresholds. Use --threshold to override."
             )
     network = build_network(base, model_id=model_id)
     config = load_weights(network, args.weights)

@@ -27,9 +27,13 @@ class Backbone:
     head_kind: str
 
 
+DENSE_08B = "Qwen/Qwen3.5-0.8B"
 DENSE_9B = "Qwen/Qwen3.5-9B"
 BACKBONES = {
     BASE_MODEL: Backbone(BASE_REVISION, 64, 16, 496, 16, "linked-pointer"),
+    DENSE_08B: Backbone(
+        "2fc06364715b967f1860aea9cf38778875588b17", 24, 6, 186, 32, "dense"
+    ),
     DENSE_9B: Backbone(
         "c202236235762e1c871ad0ccb60c8ee5ba337b9a", 32, 8, 248, 32, "dense"
     ),

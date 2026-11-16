@@ -98,7 +98,7 @@ def read_config(directory: Path) -> dict:
     if spec.head_kind == "dense" and (
         config.get("query_first") is not True or config.get("max_questions") != 1
     ):
-        raise ValueError("The dense 9B bundle requires one question before the source")
+        raise ValueError("A dense SEL bundle requires one question before the source")
     return config
 
 

@@ -12,11 +12,11 @@ document or select a region in an image.
 | Model | How to run it |
 | --- | --- |
 | [SEL Qwen 9B](https://huggingface.co/spock-oss/sel-qwen-9b) | Use `sel predict` below for single-question dense selection. |
-| [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | Use the runner and instructions in the model repository. |
+| [SEL Qwen 0.8B](https://huggingface.co/spock-oss/sel-qwen-0.8b) | Use the same `sel predict` command with the 0.8B weights. |
 
 ## Install
 
-The 9B CLI uses Linux, Python 3.12, and a CUDA GPU with BF16 support. The
+The SEL CLI uses Linux, Python 3.12, and a CUDA GPU with BF16 support. The
 commands below use PyTorch built for CUDA 13.2. Install the matching CUDA
 toolkit and a C++ compiler to build FlashAttention 2, or use a wheel built
 for your Python, PyTorch, and CUDA versions.
@@ -32,7 +32,7 @@ uv pip install -e . packaging setuptools wheel ninja
 uv pip install --no-build-isolation flash-attn==2.8.3.post2
 ```
 
-## Run SEL 9B
+## Run inference
 
 Download the LoRA adapter, dense selection head, and their configuration files.
 
@@ -56,15 +56,18 @@ unit includes character offsets for text or a bounding box in the original
 image coordinates. Default selection thresholds are **0.4** for text and
 **0.3** for images or mixed inputs. Use `--threshold` to adjust the cutoff.
 
-The CLI downloads the pinned [Qwen3.5-9B base](https://huggingface.co/Qwen/Qwen3.5-9B/tree/c202236235762e1c871ad0ccb60c8ee5ba337b9a)
-and quantizes the frozen language weights to NF4 at load time. The vision
-encoder runs in BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU and use
+To run 0.8B, replace `sel-qwen-9b` with `sel-qwen-0.8b` in the
+download command and the `--weights` path.
+
+The CLI downloads the pinned Qwen base for the chosen adapter and quantizes
+the frozen language weights to NF4 at load time. The vision encoder runs in
+BF16. Set `CUDA_VISIBLE_DEVICES` to one GPU and use
 `--base /path/to/snapshot` to load an existing copy of the base.
 
 ## Reproduce training
 
-The 9B model was trained from the pretrained base with rank-32 LoRA and a
-dense selection head. The dataset contains 57,927 training examples, 2,406
+Both models were trained from their pretrained bases with rank-32 LoRA and
+a dense selection head. The dataset contains 57,927 training examples, 2,406
 validation examples, and 3,136 test examples. Each example has one question
 and one reference selection mask.
 
