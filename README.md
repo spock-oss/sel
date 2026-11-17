@@ -81,7 +81,7 @@ of the server's selection cutoff. The GIF highlights each chosen cell
 before the board updates. The accompanying JSON logs scores, one-based
 row and column coordinates, and the outcome.
 
-The default maze is L shaped. Yellow dots mark squares already visited.
+The default maze is H-shaped. Yellow dots mark squares already visited.
 Use `--board my-maze.txt` for a rectangular ASCII board with `#` walls,
 `.` open squares, `S` start, and `G` goal. Minesweeper starts with a
 safe opening and plays among the covered squares. A mine ends the game.
