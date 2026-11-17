@@ -66,6 +66,27 @@ python example.py
 The client sends a text request, an image request, and a mixed request.
 It generates the example image locally.
 
+## Gameplay replays
+
+With the SEL server running, play one move at a time and save an animated GIF:
+
+```sh
+python play_maze.py --output replays/maze.gif
+python play_minesweeper.py --seed 0 --output replays/minesweeper.gif
+```
+
+Each turn sends the current board as an image to `/select`. The script
+plays the square with the highest patch score among legal moves, regardless
+of the server's selection cutoff. The GIF highlights each chosen cell
+before the board updates. The accompanying JSON logs scores, one-based
+row and column coordinates, and the outcome.
+
+The maze allows revisiting squares and marks them with yellow dots.
+Use `--board my-maze.txt` for a rectangular ASCII board with `#` walls,
+`.` open squares, `S` start, and `G` goal. Minesweeper starts with a
+safe opening and plays among the covered squares. A mine ends the game.
+Both scripts accept `--url` and `--max-turns`.
+
 ## API
 
 `POST /select` accepts JSON with a `question` and one or both of `text`
